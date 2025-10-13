@@ -69,7 +69,7 @@ services:
     image: cloudflare/cloudflared:latest
     depends_on:
       - caddy
-    command: tunnel --no-autoupdate run
+    command: tunnel --no-autoupdate run airflow_test_server
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
     restart: unless-stopped
