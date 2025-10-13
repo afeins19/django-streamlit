@@ -1,83 +1,84 @@
 version: "3.9"
 
 services:
-db:
-  image: postgres:16
-  environment:
-    POSTGRES_DB: ${POSTGRES_DB}
-    POSTGRES_USER: ${POSTGRES_USER}
-    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  volumes:
-    - pg_data:/var/lib/postgresql/data
-  healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-    interval: 5s
-    timeout: 3s
-    retries: 20
-  restart: unless-stopped
-
-web:
-  build:
-    context: .
-    dockerfile: Dockerfile
-  depends_on:
-    db:
-      condition: service_healthy
-  env_file: .env
-  environment:
-    DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
-    DJANGO_DEBUG: "False"
-    DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-    STATIC_URL: /static/
-  volumes:
-    - staticfiles:/staticfiles
-    - ./app:/app
-  expose:
-    - "8000"
-  restart: unless-stopped
-  
-  streamlit:
-    image: python:3.12-slim
-    working_dir: /app
-    command: >
-      bash -lc "pip install --no-cache-dir streamlit &&
-                streamlit run app.py
-                --server.port 8501
-                --server.baseUrlPath=/streamlit
-                --server.headless=true
-                --browser.gatherUsageStats=false"
-    volumes:
-      - ./streamlit:/app
-    expose:
-      - "8501"
-    restart: unless-stopped
-
-  caddy:
-    image: caddy:2.8
-    depends_on:
-      - web
-      - streamlit
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - staticfiles:/staticfiles:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    # NOTE: no ports: section → not exposed to host; only cloudflared talks to it
-    restart: unless-stopped
-
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    depends_on:
-      - caddy
-    command: tunnel --no-autoupdate run airflow_test_server
+  db:
+    image: postgres:16
     environment:
-      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     restart: unless-stopped
-
-volumes:
-  pg_data:
-  staticfiles:
-  caddy_data:
-  caddy_config:
-
+  
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      STATIC_URL: /static/
+    volumes:
+      - staticfiles:/staticfiles
+      - ./app:/app
+    expose:
+      - "8000"
+    restart: unless-stopped
+    
+    streamlit:
+      image: python:3.12-slim
+      working_dir: /app
+      command: >
+        bash -lc "pip install --no-cache-dir streamlit &&
+                  streamlit run app.py
+                  --server.port 8501
+                  --server.baseUrlPath=/streamlit
+                  --server.headless=true
+                  --browser.gatherUsageStats=false"
+      volumes:
+        - ./streamlit:/app
+      expose:
+        - "8501"
+      restart: unless-stopped
+  
+    caddy:
+      image: caddy:2.8
+      depends_on:
+        - web
+        - streamlit
+      volumes:
+        - ./Caddyfile:/etc/caddy/Caddyfile:ro
+        - staticfiles:/staticfiles:ro
+        - caddy_data:/data
+        - caddy_config:/config
+      # NOTE: no ports: section → not exposed to host; only cloudflared talks to it
+      restart: unless-stopped
+  
+    cloudflared:
+      image: cloudflare/cloudflared:latest
+      depends_on:
+        - caddy
+      command: tunnel --no-autoupdate run airflow_test_server
+      environment:
+        TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+      restart: unless-stopped
+  
+  volumes:
+    pg_data:
+    staticfiles:
+    caddy_data:
+    caddy_config:
+  
+  
