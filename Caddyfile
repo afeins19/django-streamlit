@@ -1,0 +1,10 @@
+:8080 {
+    encode gzip
+    respond "✅ Cloudflare Tunnel → Caddy is working" 200
+    
+    # logging 
+    log {
+        output stdout
+        format console 
+    }
+}
