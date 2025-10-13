@@ -5,9 +5,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY app/ /app/
 COPY app/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt gunicorn whitenoise dj-database-url
+
+COPY app/ /app/
 
 ENV PYTHONUNBUFFERED=1 \
     STATIC_ROOT=/staticfiles
