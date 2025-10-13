@@ -1,10 +1,32 @@
 :8080 {
     encode gzip
-    respond "✅ Cloudflare Tunnel → Caddy is working" 200
-    
+
     # logging 
     log {
         output stdout
         format console 
     }
+    
+    # serve django static files
+    @static path /static/*
+    handle @static {
+        root * /staticfiles
+        file_server
+    }
+
+    # steramlit -> subpaths keeping original site prefix -> base url=/streamlit
+    handle_path /streamlit* {
+        reverse_proxy streamlit:8051 # streamlit port 
+    }
+
+
+    # DEFAULT ROUTE: DJANGO 
+    reverse_proxy web:8000
+
+    # Allow embedding Streamlit within Django page on same host
+    header {
+        -X-Frame-Options
+        Content-Security-Policy "frame-ancestors 'self' https://demo.yourdomain.com"
+    }
+
 }
