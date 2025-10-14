@@ -15,6 +15,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 The .env file must contain the following:
     - STATIC_ROOT
     - ALLOWED_HOSTS 
+
 """
 
 
@@ -45,7 +46,7 @@ SECRET_KEY = 'django-insecure-@mzf%!a(bqsg30d)_9+fe-k(p*9!&%grl6sq&n0*26g6a&58i$
 DEBUG = True
 
 # importing allowed hosts from env
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '.aaron-feinberg.com'])
 
 
 # Application definition
