@@ -22,5 +22,5 @@ from core import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", view.home, name="home"),   # initial landing point/home page
+    path("", views.home, name="home"),   # initial landing point/home page
 ]
