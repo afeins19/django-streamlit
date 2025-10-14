@@ -8,7 +8,19 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
+
+
+>>>>>>>> ENV FILE NOTES <<<<<<<<
+
+The .env file must contain the following:
+    - STATIC_ROOT
+    - ALLOWED_HOSTS 
 """
+
+
+
+
+
 
 from pathlib import Path
 
@@ -32,7 +44,8 @@ SECRET_KEY = 'django-insecure-@mzf%!a(bqsg30d)_9+fe-k(p*9!&%grl6sq&n0*26g6a&58i$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# importing allowed hosts from env
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost'])
 
 
 # Application definition
