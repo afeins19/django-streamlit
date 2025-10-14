@@ -1,4 +1,4 @@
 **/.env
 **/pat*
 **/venv
-**/db*
+**/*db.sqlite3
