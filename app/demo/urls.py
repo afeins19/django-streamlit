@@ -20,7 +20,19 @@ from django.urls import path
 # custom view importing
 from core import views
 
+# DEBUGING HEADERS
+def debug_headers(request):
+    return JsonResponse({
+        "is_secure": request.is_secure(),
+        "scheme": request.scheme,
+        "host": request.get_host(),
+        "x_forwarded_proto": request.META.get("HTTP_X_FORWARDED_PROTO"),
+        "origin": request.META.get("HTTP_ORIGIN"),
+    })
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", views.home, name="home"),   # initial landing point/home page
+    path("", views.home, name="home"),   	# initial landing point/home page
+    path("_debug_headers", debug_headers),	# test debuging -> is_secure should be true
 ]
