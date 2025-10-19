@@ -47,7 +47,7 @@ DEBUG = True
 
 # importing allowed hosts from env
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', 'django.aaron-feinberg.com'])
-CSRF_TRUSTED_ORIGINS = env.list('DJANGO_CRSF_TRUSTED_ORIGINS', default=['https://django.aaron-feinberg.com'])
+CSRF_TRUSTED_ORIGINS = env.list('DJANGO_CSRF_TRUSTED_ORIGINS', default=['https://django.aaron-feinberg.com'])
 
 
 # Application definition
