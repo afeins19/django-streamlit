@@ -46,8 +46,8 @@ SECRET_KEY = 'django-insecure-@mzf%!a(bqsg30d)_9+fe-k(p*9!&%grl6sq&n0*26g6a&58i$
 DEBUG = True
 
 # importing allowed hosts from env
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '.aaron-feinberg.com'])
-CSRF_TRUSTED_ORIGINS = env.list('DJANGO_CRSF_TRUSTED_ORIGINS')
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', 'django.aaron-feinberg.com'])
+CSRF_TRUSTED_ORIGINS = env.list('DJANGO_CRSF_TRUSTED_ORIGINS', default=['https://django.aaron-feinberg.com'])
 
 
 # Application definition
