@@ -17,12 +17,18 @@
     # steramlit -> subpaths keeping original site prefix -> base url=/streamlit
     handle_path /streamlit* {
         reverse_proxy streamlit:8501 # streamlit port 
-    }
+     }
 
 
     # DEFAULT ROUTE: DJANGO 
     reverse_proxy web:8000 {
         header_up Host {host}
+	
+	# accepting additional headers explicitely (django crsf token error)
+	header_up X-Forwarded-Host {host}
+	header_up X-Forwarded-Proto https
+	header_up X-Forwarded-For {remote}
+	header_up X-Real-IP {remote}
     }
 
     # Allow embedding Streamlit within Django page on same host
