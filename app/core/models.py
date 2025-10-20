@@ -38,6 +38,7 @@ class Report(models.Model):
     day_of_week_deadline = models.IntegerField(                                             # deadline to update
         choices=DAYS_OF_WEEK_CHOICES, blank=True, null=True
     )
+    
     time_deadline = models.TimeField(
         blank=True, 
         null=True,

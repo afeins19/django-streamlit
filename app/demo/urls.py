@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.http import JsonResponse
 
 # custom view importing
@@ -35,5 +35,7 @@ def debug_headers(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", views.home, name="home"),   	# initial landing point/home page
+    #path("reports/", include("core.urls")),
+
     path("_debug_headers", debug_headers),	# test debuging -> is_secure should be true
 ]

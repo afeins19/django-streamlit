@@ -1,0 +1,30 @@
+{% block content %}
+  <h1>My Reports</h1>
+
+  {% if page_obj.object_list %}
+    <table>
+      <thead>
+        <tr>
+          <th>Report</th>
+          <th>Your role</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for access in page_obj.object_list %}
+        <tr>
+          <td>{{ access.report.name }}</td>
+          <td>{{ access.get_role_display }}</td>
+          <td>
+            <a href="{% url 'open_report_editor' access.report.slug %}">Open editor</a>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    {% include "reports/pagination.html" with page_obj=page_obj %}
+  {% else %}
+    <p>You don’t have access to any reports yet.</p>
+  {% endif %}
+{% endblock %}
