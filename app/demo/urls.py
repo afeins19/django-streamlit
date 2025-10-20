@@ -34,8 +34,9 @@ def debug_headers(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("accounts/", include("django.contrib.auth.urls")),  # <-- adds /accounts/login/, logout, etc.
     path("", views.home, name="home"),   	# initial landing point/home page
-    #path("reports/", include("core.urls")),
+    path("reports/", include("core.urls")),
 
     path("_debug_headers", debug_headers),	# test debuging -> is_secure should be true
 ]

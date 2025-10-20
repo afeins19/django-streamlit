@@ -62,6 +62,7 @@ def admin_report_detail(request, slug):
 # USER REPORT VIEW
 # ----------------------
 
+@login_required
 def my_reports(request):
     """
         only returns the reports the current user can access. The `my_access` objecft
@@ -69,7 +70,7 @@ def my_reports(request):
     """
 
     my_access = (
-        UserReportAcess.objects
+        UserReportAccess.objects
         .select_related("report")
         .filter(user=request.user)
         .order_by("report__name")
@@ -77,6 +78,6 @@ def my_reports(request):
 
     pageinator = Paginator(my_access, 25)
     page = request.GET.get("page") or 1
-    page_obj = paginator.get_page(page)
+    page_obj = pageinator.get_page(page)
 
-    return render(request, "reports/myreports.html", {"page_obj" : page_obj})
+    return render(request, "core/my_reports.html", {"page_obj" : page_obj})

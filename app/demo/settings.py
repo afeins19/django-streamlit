@@ -56,6 +56,12 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 
+# LOGIN PATHS
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/reports/my_reports/"
+LOGOUT_REDIRECT_URL = "/"
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -146,8 +152,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = env('STATIC_ROOT', default=BASE_DIR / '.env')
+#STATICFILES_DIR = [
+#    BASE_DIR / "static", # static css/html dir
+#]
 
+STATIC_ROOT = Path("/staticfiles")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -5,12 +5,37 @@
   box-sizing: border-box;
 }
 
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 10px 20px;
+  text-align: left;
+}
+
+td:first-child {
+  padding-right: 60px;
+}
+
+th {
+  background-color: #f3f3f3;
+}
+
+tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+
 body {
   font-family: 'Segoe UI', Roboto, sans-serif;
   background-color: #f5f7fa;
   color: #333;
   line-height: 1.6;
-  padding: 2rem;
+  padding: 5rem;
+
 }
 
 /* Header */
