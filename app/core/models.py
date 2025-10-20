@@ -1,13 +1,15 @@
 from django.db import models
-
+from django.contrib.auth import get_user_model
 """"
 NOTE: we are using a through model. this means
 that we use an intermediate object userReportAccess() to manipulate a 'through' table to manage report access 
 """
 
+# DEFINE DEFAULT DJANGO USER
+User = get_user_model()
 
 # Create your models here.
-class report(models.model):
+class Report(models.Model):
     """represents a specific report"""
 
     REPORT_CADENCE_CHOICES = [
@@ -37,7 +39,8 @@ class report(models.model):
         choices=DAYS_OF_WEEK_CHOICES, blank=True, null=True
     )
     time_deadline = models.TimeField(
-        blank=True, null=True,
+        blank=True, 
+        null=True,
         help_text="Time of day <<CURRENTLY WITH RESPECT TO EST>> the report should be updated by."
     )
 
