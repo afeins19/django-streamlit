@@ -35,6 +35,7 @@
     header {
         -X-Frame-Options
         Content-Security-Policy "frame-ancestors 'self' https://django.aaron-feinberg.com"
+    	Content-Security-Policy "default-src 'self' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; script-src 'self' https://cdn.tailwindcss.com"
     }
 
 }

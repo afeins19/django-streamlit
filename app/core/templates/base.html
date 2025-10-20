@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}My Django App{% endblock %}</title>
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+  </head>
+
+  <body>
+<header class="bg-white shadow-md">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+    <h1 class="text-2xl font-semibold text-blue-600">RCMA Reports</h1>
+
+    <!-- Navigation Tabs (horizontal) -->
+    <nav>
+      <ul class="flex space-x-6">  <!-- THIS makes them horizontal -->
+        <li><a href="{% url 'home' %}" class="hover:text-blue-600 font-medium">Home</a></li>
+        <li><a href="{% url 'my_reports' %}" class="hover:text-blue-600 font-medium">My Reports</a></li>
+        <li><a href="/admin/" class="hover:text-blue-600 font-medium">Admin</a></li>
+        <li><a href="/accounts/logout/" class="hover:text-blue-600 font-medium">Logout</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+
+    <main>
+      {% block content %}
+      <!-- Each page inserts its unique content here -->
+      {% endblock %}
+    </main>
+
+    <footer>
+      <p>&copy; 2025 Django Reports</p>
+    </footer>
+  </body>
+</html>

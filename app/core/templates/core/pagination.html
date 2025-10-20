@@ -1,6 +1,4 @@
-{% load static %}
-<link rel="stylesheet" href="{% static 'core/styles.css' %}">
-
+{% extends "core/base.html" %}
 
 {% if page_obj.paginator.num_pages > 1 %}
 <nav aria-label="Pagination">

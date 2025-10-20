@@ -1,13 +1,15 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Prefetch
-from django.shortcuts import get_object_or_404, render
-from .models import Report, UserReportAccess
+from django.shortcuts import get_object_or_404, render, redirect
 
+from .models import Report, UserReportAccess, UserProfile
+from .forms import ProfileForm
 
 # Create your views here.
 
@@ -81,3 +83,19 @@ def my_reports(request):
     page_obj = pageinator.get_page(page)
 
     return render(request, "core/my_reports.html", {"page_obj" : page_obj})
+
+
+
+@login_required
+def my_settings(request):
+    """user settings where they can edit their profile"""
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if request.method == "POST":        # submitting form 
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Settings Saved!')
+            return redirect("my_settings")
+    else:                               # requesting form
+        form = ProfileForm(instance=profile)
+    return render(request, "core/my_settings.html", {"form": form})

@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}RCMA{% endblock %}</title>
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+  </head>
+
+<body class="bg-gray-50 text-gray-900 flex flex-col min-h-screen">
+  <!-- Site-wide navigation header -->
+  <header class="bg-white shadow-md">
+    <div class="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
+      <h1 class="text-3xl font-bold text-blue-600 tracking-tight">RCMA Reports</h1>
+      <nav>
+        <ul class="flex space-x-8 text-lg">
+          <li><a href="{% url 'home' %}" class="hover:text-blue-600 font-medium">Home</a></li>
+          <li><a href="{% url 'my_reports' %}" class="hover:text-blue-600 font-medium">My Reports</a></li>
+          <li><a href="{% url 'my_settings' %}" class="hover:text-blue-600 font-medium">Settings</a></li>
+          <li><a href="/admin/" class="hover:text-blue-600 font-medium">Admin</a></li>
+          <li><a href="/accounts/logout/" class="hover:text-blue-600 font-medium">Logout</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+    <main class="flex-grow max-w-6xl mx-auto p-6 mt-8">
+      {% block content %}
+        <!-- EACH PAGE INJECTS ITS STUFF HERE -->
+      {% endblock %}
+    </main>
+
+    <footer>
+      <p>&copy; 2025 RCMA Reports</p>
+    </footer>
+  </body>
+</html>

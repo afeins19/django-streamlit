@@ -36,7 +36,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),  # <-- adds /accounts/login/, logout, etc.
     path("", views.home, name="home"),   	# initial landing point/home page
-    path("reports/", include("core.urls")),
-
+    path("", include("core.urls")),         # include routes to all links under the core app
     path("_debug_headers", debug_headers),	# test debuging -> is_secure should be true
 ]
