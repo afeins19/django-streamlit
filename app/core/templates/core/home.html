@@ -1,12 +1,39 @@
 {% extends "core/base.html" %}
+{% block content %}
 
+<!-- Left-aligned welcome section below header -->
+<div class="flex justify-start mt-6 ml-4">
+  <div class="bg-blue-50 border border-blue-200 rounded-lg shadow-sm py-3 px-5 w-fit">
+    <h2 class="text-xl font-semibold text-blue-700">
+        Hello, {{ userdata.user_first_name|default:user.username }}!
+    </h2>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>    
+    {% if user_data %}
+      <p class="text-gray-700 mt-1">
+        Location: <span class="font-medium">{{ user_data.user_location }}</span><br>
+        Timezone: <span class="font-medium">{{ user_data.user_timezone }}</span>
+      </p>
+    {% endif %}
+  </div>
+</div>
 
-    <meta charset="UTF-8">
-    <title>{% block title %} RCMA | Home {% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<div class="mt-8 ml-4">
+  <h3 class="text-lg font-semibold text-gray-800 mb-2">Your Dashboard</h3>
+  <p class="text-gray-600">
+    Here’s what’s happening today in your reports and tasks.
+  </p>
 
+  {% for r in report_data %}
+  <tr>
+    <td>{{ r.report_name }}</td>
+    <td>
+      <span class="{% if r.is_overdue %}text-red-600 font-semibold{% else %}text-green-700{% endif %}">
+        {{ r.status_text }}
+      </span>
+    </td>
+  </tr>
+{% endfor %}
 
+</div>
+
+{% endblock %}

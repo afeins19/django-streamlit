@@ -2,6 +2,15 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from django.utils import timezone
+
+from datetime import datetime, timedelta
+import logging
+
+logger = logging.getLogger(__name__)  # use module name for clarity
+
 
 """"
 NOTE: we are using a through model. this means
@@ -11,9 +20,28 @@ that we use an intermediate object userReportAccess() to manipulate a 'through' 
 # DEFINE DEFAULT DJANGO USER
 User = get_user_model()
 
-# Create your models here.
+# Create your models here.class TimeSlot(models.Model):
+class TimeSlot(models.Model):
+    """Selectable dropdown for time of day."""
+
+    # half-hour intervals from midnight to 23:30
+    TIME_CHOICES = [
+        (f"{h:02d}:{m:02d}:00", f"{h:02d}:{m:02d}")
+        for h in range(0, 24)
+        for m in (0, 30)
+    ]
+
+    time = models.TimeField(choices=TIME_CHOICES, unique=True)
+
+    class Meta:
+        ordering = ["time"]
+
+    def __str__(self):
+        return self.time.strftime("%H:%M")
+
+
 class Report(models.Model):
-    """represents a specific report"""
+    """Represents a specific report."""
 
     REPORT_CADENCE_CHOICES = [
         ("Daily", "Daily"),
@@ -22,48 +50,84 @@ class Report(models.Model):
     ]
 
     DAYS_OF_WEEK_CHOICES = [
-        ('Monday', 'Monday'),
-        ('Tuesday', 'Tuesday'),
-        ('Wednesday', 'Wednesday'),
-        ('Thursday', 'Thursday'),
-        ('Friday', 'Friday'),
-        ('Saturday', 'Saturday'),
-        ('Sunday', 'Sunday'),
+        (0, "Monday"),
+        (1, "Tuesday"),
+        (2, "Wednesday"),
+        (3, "Thursday"),
+        (4, "Friday"),
+        (5, "Saturday"),
+        (6, "Sunday"),
     ]
 
-    TIME_OF_DAY_CHOICES = [(t,t) for t in range(12)]
+    name = models.CharField(max_length=200, unique=True)
+    slug = models.SlugField(unique=True)
+    description = models.TextField(blank=True)
+    cadence = models.CharField(max_length=20, choices=REPORT_CADENCE_CHOICES)
 
-
-    name = models.CharField(max_length=200, unique=True)                                    # report name
-    slug = models.SlugField(unique=True)                                                    # unique id for report
-    description = models.TextField(blank=True)                                              # description
-    cadence = models.CharField(choices=REPORT_CADENCE_CHOICES)                              # refresh period e.g. daily, weekly etc. 
-    day_of_week_deadline = models.IntegerField(                                             # deadline to update
+    day_of_week_deadline = models.IntegerField(
         choices=DAYS_OF_WEEK_CHOICES, blank=True, null=True
     )
 
-    time_deadline = models.TimeField(
-        blank=True, 
+    time_deadline = models.ForeignKey(
+        TimeSlot,
+        on_delete=models.SET_NULL,
         null=True,
-        help_text="Time of day (WITH RESPECT TO YOUR TIME ZONE) the report should be updated by."
+        blank=True,
+        help_text="Time of day (WITH RESPECT TO YOUR TIME ZONE) the report should be updated by.",
     )
 
-    # any user that has some sort of access to the report (read or write)
     users = models.ManyToManyField(
         User,
-        through='UserReportAccess',
-        related_name='reports',
+        through="UserReportAccess",
+        related_name="accessible_reports",
         blank=True,
     )
 
     class Meta:
         ordering = ["name"]
 
-
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+
+    def deadline_date_time(self, to_tz: str | None = None):
+        """
+        Return the next occurrence of (day_of_week_deadline + time_deadline) as an aware datetime.
+        If either part is missing, return None.
+        """
+        if self.day_of_week_deadline is None or not self.time_deadline:
+            return None
+
+        base_tz = ZoneInfo(settings.TIME_ZONE)
+        now_base = timezone.now().astimezone(base_tz)
+
+        target_wd = int(self.day_of_week_deadline)  # 0 = Monday
+        today_wd = now_base.weekday()
+
+        # Calculate how many days ahead until target weekday
+        days_ahead = (target_wd - today_wd) % 7
+        candidate_date = now_base.date() + timedelta(days=days_ahead)
+
+        # ✅ FIX: use self.time_deadline.time (actual time) instead of the object
+        naive = datetime.combine(candidate_date, self.time_deadline.time)
+        aware = timezone.make_aware(naive, base_tz)
+
+        if days_ahead == 0 and aware <= now_base:
+            aware += timedelta(days=7)
+
+        if to_tz:
+            aware = aware.astimezone(ZoneInfo(to_tz))
+
+        return aware
+
+    def remaining(self, to_tz: str | None = None):
+        """Timedelta until deadline in the requested timezone (negative if past)."""
+        now = timezone.now()
+        if to_tz:
+            now = now.astimezone(ZoneInfo(to_tz))
+        dt = self.deadline_date_time(to_tz)
+        return None if not dt else (dt - now)
 
     def __str__(self):
         return f"{self.name} (refreshes) - {self.description}"
@@ -96,10 +160,12 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} @ {self.location}"
 
+
 class UserReportAccess(models.Model):
     ROLE_CHOICES = [("view","View"), ("edit","Edit"), ("owner","Owner")]
     user   = models.ForeignKey(User,   on_delete=models.CASCADE, related_name="report_links")       # user -> reports
-    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name="user_links")         # report -> users
+    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name="user_links")        # report -> users
+    
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="edit")
     granted_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True)
@@ -107,7 +173,7 @@ class UserReportAccess(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "report"], name="uniq_user_report_access"
+                fields=["user", "report"], name="uniqe_user_report_access"
             )
         ]
 

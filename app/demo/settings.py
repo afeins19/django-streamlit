@@ -58,7 +58,7 @@ CSRF_COOKIE_SECURE = True
 
 # LOGIN PATHS
 LOGIN_URL = "/accounts/login/"
-LOGIN_REDIRECT_URL = "/reports/my_reports/"
+LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
 

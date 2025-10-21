@@ -20,7 +20,7 @@
       <tr class="hover:bg-gray-50">
         <td class="py-3 px-6">{{ access.report.name }}</td>
         <td class="py-3 px-6">{{ access.get_role_display }}</td>
-        <td class="py-3 px-6">{{ access.report.day_of_week_deadline }}</td>
+        <td class="py-3 px-6">{{ access.report.get_day_of_week_deadline_display }} at {{ access.report.time_deadline}}</td>
       </tr>
       {% endfor %}
     </tbody>

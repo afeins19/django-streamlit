@@ -3,6 +3,12 @@ from django import forms
 from .models import UserProfile
 from zoneinfo import ZoneInfo
 
+
+import logging
+
+logger = logging.getLogger(__name__)  # use module name for clarity
+
+
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
