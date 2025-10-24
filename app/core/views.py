@@ -1,5 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.urls import reverse_lazy
+from django.views.generic import CreateView
+from django.contrib.auth.forms import UserCreationForm
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -50,13 +53,13 @@ def home(request):
 
 
         # only calculate time until deadline if user has a defined timezone
-        if user_tz and user_tz.strip().lower() != "none":
+        if user_tz is not None and user_tz.strip().lower() != "none":
             now = now.astimezone(ZoneInfo(user_tz))
 
             # calcualte deadlines with a delta from users timezone
             for r in reports:
                 # get report submission deadline in terms of users local tz
-                local_deadline = r.deadline_date_time(user_tz)
+                local_deadline = r.deadline_for_user(user_tz)
                 is_overdue = False
 
                  # skip reports with missing deadline 
@@ -67,7 +70,9 @@ def home(request):
 
                 delta = local_deadline - now 
                 delta_seconds = int(delta.total_seconds())
-
+                
+                seconds_until_deadline = delta_seconds # for sorting 
+                
                 if delta_seconds <= 0:
                     is_overdue = True
                     status_text=f"Overdue! (due at {str(local_deadline)})"
@@ -85,6 +90,7 @@ def home(request):
 
                 report_data.append({
                     "report_name" : r.name,
+                    "seconds_until_deadline" : seconds_until_deadline,
                     "status_text" : status_text,
                     "is_overdue" : is_overdue
                 })
@@ -94,9 +100,10 @@ def home(request):
                     "user_location" : profile.location,
                     "user_timezone" : profile.timezone
                 }
-            
+        
+        # sort by nearest deadline
+        report_data.sort(key=lambda rpt : rpt['seconds_until_deadline'], reverse=False)
         return render(request, "core/home.html", {"report_data" : report_data, "user_data" : user_data})
-
 
 # ----------------------
 # ADMIN REPORT VIEW
@@ -142,24 +149,44 @@ def admin_report_detail(request, slug):
 
 
 # ----------------------
-# USER REPORT VIEW
+# USER VIEWS
 # ----------------------
+
+#class sign_up(CreateView):
+    #"""extends CreateView() from django and makes a templated sign up form for the user"""
+    #form_class = UserCreationForm
+
 
 @login_required
 def my_reports(request):
     """
-        only returns the reports the current user can access. The `my_access` objecft
+        only returns the reports the current user can access. The `qs` objecft
         will return a list of through-rows from which the report names can be extracted
     """
 
-    my_access = (
+    # get user's time zone stuff
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    user_tz = profile.timezone or "UTC-5" # EST BY DEFAULT
+
+    # fetch UserReportAccess() objects and grab each one's Report() object
+    # then extract the time deadline
+    qs = (
         UserReportAccess.objects
-        .select_related("report")
+        .select_related("report", "report__time_deadline")
         .filter(user=request.user)
         .order_by("report__name")
     )
 
-    pageinator = Paginator(my_access, 25)
+    logger.error(qs)
+
+    # save qs as list 
+    accesses = list(qs)
+
+    # convert the deadlines for each report into the user's timezone 
+    for access in accesses:
+        access.local_deadline = access.report.deadline_for_user(request.user)
+
+    pageinator = Paginator(accesses, 25)
     page = request.GET.get("page") or 1
     page_obj = pageinator.get_page(page)
 

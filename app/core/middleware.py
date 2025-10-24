@@ -10,6 +10,8 @@ class UserTimezoneMiddleware:
 
     def __call__(self, request):
         tz_name = None
+
+        # if user has a profile, set time zone from profile
         if request.user.is_authenticated and hasattr(request.user, "profile"):
             tz_name = request.user.profile.timezone or DEFAULT_TZ
         timezone.activate(ZoneInfo(tz_name or DEFAULT_TZ))

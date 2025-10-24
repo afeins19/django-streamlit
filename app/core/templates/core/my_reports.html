@@ -12,7 +12,7 @@
       <tr>
         <th class="py-3 px-6 text-left">Report</th>
         <th class="py-3 px-6 text-left">Permissions</th>
-        <th class="py-3 px-6 text-left"> Submission DateTime</th>
+        <th class="py-3 px-6 text-left"> Submission DateTime (local time)</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-200">
@@ -20,7 +20,10 @@
       <tr class="hover:bg-gray-50">
         <td class="py-3 px-6">{{ access.report.name }}</td>
         <td class="py-3 px-6">{{ access.get_role_display }}</td>
-        <td class="py-3 px-6">{{ access.report.get_day_of_week_deadline_display }} at {{ access.report.time_deadline}}</td>
+        <td class="py-3 px-6">{{ access.report.get_day_of_week_deadline_display }} 
+                              at 
+                              {{ access.local_deadline|time:"g:i A T" }}
+        </td>
       </tr>
       {% endfor %}
     </tbody>

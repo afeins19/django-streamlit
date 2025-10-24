@@ -17,10 +17,15 @@ NOTE: we are using a through model. this means
 that we use an intermediate object userReportAccess() to manipulate a 'through' table to manage report access 
 """
 
+# ------------------------------ DEFAULTS ------------------------------
 # DEFINE DEFAULT DJANGO USER
 User = get_user_model()
+REPORT_TIME_ZONE = ZoneInfo("America/New_York")        # dst safe
+# ----------------------------------------------------------------------
 
-# Create your models here.class TimeSlot(models.Model):
+# Create your models here
+
+
 class TimeSlot(models.Model):
     """Selectable dropdown for time of day."""
 
@@ -59,11 +64,14 @@ class Report(models.Model):
         (6, "Sunday"),
     ]
 
+    # all reports will be set to US/Eastern Time zone -> corporate time zeon 
+
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
     cadence = models.CharField(max_length=20, choices=REPORT_CADENCE_CHOICES)
 
+    
     day_of_week_deadline = models.IntegerField(
         choices=DAYS_OF_WEEK_CHOICES, blank=True, null=True
     )
@@ -91,56 +99,61 @@ class Report(models.Model):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
-    def deadline_date_time(self, to_tz: str | None = None):
+# ---------- Canonical computation for default corporate time zone ----------
+    def next_deadline_est(self, from_dt=None):
         """
-        Return the next occurrence of (day_of_week_deadline + time_deadline) as an aware datetime.
-        If either part is missing, return None.
+        Next deadline as an aware datetime in America/New_York.
+            Respects time_deadline (TimeSlot) + day_of_week_deadline (0=Mon..6=Sun).
+            - Daily: today at time, or tomorrow if past.
+            - Weekly: next occurrence of configured weekday at time.
         """
-        if self.day_of_week_deadline is None or not self.time_deadline:
+        if not self.time_deadline:
             return None
 
-        base_tz = ZoneInfo(settings.TIME_ZONE)
-        now_base = timezone.now().astimezone(base_tz)
+        now_est = (from_dt or timezone.now()).astimezone(REPORT_TIME_ZONE)
+        hour   = self.time_deadline.time.hour
+        minute = self.time_deadline.time.minute
 
-        target_wd = int(self.day_of_week_deadline)  # 0 = Monday
-        today_wd = now_base.weekday()
+        base_today = now_est.replace(hour=hour, minute=minute, second=0, microsecond=0)
 
-        # Calculate how many days ahead until target weekday
-        days_ahead = (target_wd - today_wd) % 7
-        candidate_date = now_base.date() + timedelta(days=days_ahead)
+        if self.cadence == "Weekly" and self.day_of_week_deadline is not None:
+            delta = (int(self.day_of_week_deadline) - now_est.weekday()) % 7
+            candidate = base_today + timedelta(days=delta)
+            if delta == 0 and now_est > candidate:
+                candidate += timedelta(days=7)
+            return candidate
 
-        # ✅ FIX: use self.time_deadline.time (actual time) instead of the object
-        naive = datetime.combine(candidate_date, self.time_deadline.time)
-        aware = timezone.make_aware(naive, base_tz)
+        # Daily (or fallback)
+        return base_today if now_est <= base_today else base_today + timedelta(days=1)
 
-        if days_ahead == 0 and aware <= now_base:
-            aware += timedelta(days=7)
+    # ---------- Presentation for a user ----------
+    def deadline_for_user(self, user, from_dt=None):
+        """Return the canonical deadline converted to the user's timezone."""
+        est_dt = self.next_deadline_est(from_dt)
+        if not est_dt:
+            return None
+        user_tz = ZoneInfo(getattr(getattr(user, "profile", None), "timezone", "UTC"))
+        return est_dt.astimezone(user_tz)
 
-        if to_tz:
-            aware = aware.astimezone(ZoneInfo(to_tz))
-
-        return aware
-
-    def remaining(self, to_tz: str | None = None):
-        """Timedelta until deadline in the requested timezone (negative if past)."""
-        now = timezone.now()
-        if to_tz:
-            now = now.astimezone(ZoneInfo(to_tz))
-        dt = self.deadline_date_time(to_tz)
-        return None if not dt else (dt - now)
+    def remaining_for_user(self, user, from_dt=None):
+        """Timedelta until the user's localized deadline (negative if past)."""
+        local_deadline = self.deadline_for_user(user, from_dt)
+        if not local_deadline:
+            return None
+        now_local = (from_dt or timezone.now()).astimezone(local_deadline.tzinfo)
+        return local_deadline - now_local
 
     def __str__(self):
-        return f"{self.name} (refreshes) - {self.description}"
+        return f"{self.name} (refreshes) @ {self.description}"
+
 
 
 class UserProfile(models.Model):
-
     LOCATION_CHOICES = [
             ("CORPORATE" , "CORPORATE"),
             ("ACBO" , "ACBO"),
             ("WCBO" , "WCBO"),
         ]
-
 
     LOCATION_TIMEZONES = {
         "CORPORATE" : "America/New_York",

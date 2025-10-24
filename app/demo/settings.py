@@ -148,7 +148,7 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = True       # SHOW ALL DATETIMES IN USER'S TIME ZONE 
 
 
 # Static files (CSS, JavaScript, Images)
