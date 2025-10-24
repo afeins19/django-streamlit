@@ -14,6 +14,10 @@ The `Report()` object in the context of this site reffers to the manual data ent
 - **Deadline** - reports with a deadline have a time and/or date deadline (attriubte in their model) that is not null - this will automatically mean the report is of the deadline variety.
 - **non-deadline** - reports without a deadline (such as mapping sheets) may be updated at any time. 
 
+
+
+# Users
+
 ### General Interface Requirements 
 - Users shall be notified of upcoming reports by way of their home page
 - Users shall see all dates and deadlines with respect to their time zone
@@ -31,11 +35,24 @@ The `Report()` object in the context of this site reffers to the manual data ent
 - be given the option (if allowed to edit) to modify the most recently submitted report if past deadline
 
 
+# Data Entry 
+if a user has permission to edit a report, he or she will be directed to a streamlit app that will do the following:
+
+1. fetch a dataframe from the db of rows that tie to this user via their email
+2. load a streamlit table populated with the information in that dataframe
+3. allow the user to add,edit, and remove rows from the table
+4. once the table is ready for submission, ensure the following:
+ - all data types match the column types of the db
+ - any integrity violations (null, foreignkey violation, uniqueness) are raised to the user
+
+
 ### Data Entry Form (Streamlit) Requirements
 - Concurrent data entry shall be allowed
 - Data type validation shall not be allowed to enter the db
 - Data type validation checks shall notify the user if he/she attempts to input a value of the wrong
 - Valid data entries shall be automatically pushed to the db
+
+
 
 
 
